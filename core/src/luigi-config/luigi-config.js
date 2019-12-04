@@ -632,7 +632,7 @@ Promise.all(initPromises)
           var staticNodes = [
             {
               pathSegment: 'workspace',
-              label: 'Namespaces',
+              label: 'Namespaces!',
               viewUrl: config.coreModuleUrl + '/namespaces',
               icon: 'dimension',
               viewGroup: coreUIViewGroupName,
@@ -667,6 +667,13 @@ Promise.all(initPromises)
               category: { label: 'Settings', icon: 'settings' },
               viewUrl: '/consoleapp.html#/home/settings/organisation',
               viewGroup: consoleViewGroupName,
+            },
+            {
+              pathSegment: 'Logs',
+              navigationContext: 'Logs',
+              label: 'Log monitoring',
+              category: 'Logs',
+              viewUrl: '/consoleapp.html#/home'
             },
             {
               pathSegment: 'global-permissions',
