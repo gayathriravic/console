@@ -633,7 +633,7 @@ Promise.all(initPromises)
             {
               pathSegment: 'workspace',
               label: 'Namespaces!',
-              viewUrl: config.coreModuleUrl + '/namespaces',
+              viewUrl: '/consoleapp.html#/home',
               icon: 'dimension',
               viewGroup: coreUIViewGroupName,
             },
