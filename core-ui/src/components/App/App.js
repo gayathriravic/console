@@ -6,6 +6,14 @@ import NamespaceList from '../NamespaceList/NamespaceList';
 import Lambdas from '../Lambdas/Lambdas';
 import LambdaDetailsWrapper from '../Lambdas/LambdaDetails/LambdaDetailsWrapper';
 
+import CreateApiRule from '../ApiRules/CreateApiRule/CreateApiRule';
+
+import ApiRules from 'components/ApiRules/ApiRules';
+import ApiRuleDetails from 'components/ApiRules/ApiRuleDetails/ApiRuleDetails';
+import EditApiRule from 'components/ApiRules/EditApiRule/EditApiRule';
+
+import ApplicationList from 'components/Applications/ApplicationList/ApplicationList';
+
 export default function App() {
   return (
     <NotificationProvider>
@@ -14,6 +22,20 @@ export default function App() {
         <Route path="/lambdas" exact component={Lambdas} />
         <Route path="/preload" component={() => null} />
         <Route path="/namespaces" component={NamespaceList} />
+        <Route path="/applications" component={ApplicationList} />
+
+        <Route exact path="/apirules" component={ApiRules} />
+        <Route exact path="/apirules/create" component={CreateApiRule} />
+        <Route
+          exact
+          path="/apirules/details/:apiName"
+          component={RoutedApiDetails}
+        />
+        <Route
+          exact
+          path="/apirules/edit/:apiName"
+          component={RoutedEditApiRule}
+        />
       </Switch>
     </NotificationProvider>
   );
@@ -21,4 +43,12 @@ export default function App() {
 
 function RoutedLambdaDetails({ match }) {
   return <LambdaDetailsWrapper lambdaName={match.params.name} />;
+}
+
+function RoutedApiDetails({ match }) {
+  return <ApiRuleDetails apiName={match.params.apiName} />;
+}
+
+function RoutedEditApiRule({ match }) {
+  return <EditApiRule apiName={match.params.apiName} />;
 }

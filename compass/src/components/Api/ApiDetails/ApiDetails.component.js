@@ -5,62 +5,13 @@ import './ApiDetails.scss';
 import ApiDetailsHeader from './ApiDetailsHeader/ApiDetailsHeader';
 import ResourceNotFound from '../../Shared/ResourceNotFound.component';
 import DocumentationComponent from '../../../shared/components/DocumentationComponent/DocumentationComponent';
-import CustomPropTypes from 'react-shared';
-
-import { Panel } from '@kyma-project/react-components';
-import AceEditor from 'react-ace';
-import 'brace/mode/yaml';
-import 'brace/mode/json';
-import 'brace/theme/github';
-
-function getApiType(api) {
-  switch (api.spec.type) {
-    case 'OPEN_API':
-      return 'openapi';
-    case 'ODATA':
-      return 'odata';
-    case 'ASYNC_API':
-      return 'asyncapi';
-    default:
-      return null;
-  }
-}
-
-// temporary component, remove after GenericDocumentation for Open API is fixed.
-const OpenAPIEditor = ({ api }) => {
-  const editorMode = api.spec.format.toLowerCase();
-  let spec = '';
-  try {
-    spec = JSON.stringify(JSON.parse(api.spec.data), null, 2);
-  } catch (e) {
-    console.error('An error occurred while parsing API spec: ', e);
-    spec = api.spec.data;
-  }
-  return (
-    <Panel className="fd-has-margin-s">
-      <Panel.Body>
-        <AceEditor
-          style={{ border: '1px solid var(--fd-color-status-3)' }}
-          className="fd-has-margin-m"
-          mode={editorMode}
-          theme="github"
-          value={spec}
-          width="95%"
-          readOnly={true}
-          minLines={14}
-          maxLines={40}
-          name="open-api-text-editor"
-          editorProps={{ $blockScrolling: true }}
-        />
-      </Panel.Body>
-    </Panel>
-  );
-};
+import Panel from 'fundamental-react/Panel/Panel';
+import { getApiType } from './../ApiHelpers';
 
 export const getApiDataFromQuery = (applicationQuery, apiId, eventApiId) => {
   const rawApisForApplication = apiId
-    ? applicationQuery.apis
-    : applicationQuery.eventAPIs;
+    ? applicationQuery.apiDefinitions
+    : applicationQuery.eventDefinitions;
 
   if (
     rawApisForApplication &&
@@ -77,15 +28,17 @@ export const getApiDataFromQuery = (applicationQuery, apiId, eventApiId) => {
 };
 
 const ApiDetails = ({
-  getApisForApplication,
-  getEventApisForApplication,
-  deleteApi,
-  deleteEventApi,
+  getApiDefinitionsForApplication,
+  getEventDefinitionsForApplication,
+  deleteAPIDefinition,
+  deleteEventDefinition,
   apiId,
   eventApiId,
   applicationId,
 }) => {
-  const query = apiId ? getApisForApplication : getEventApisForApplication;
+  const query = apiId
+    ? getApiDefinitionsForApplication
+    : getEventDefinitionsForApplication;
 
   const { loading, error, application } = query;
 
@@ -105,34 +58,35 @@ const ApiDetails = ({
   const api = getApiDataFromQuery(application, apiId, eventApiId);
 
   if (!api) {
-    return <ResourceNotFound resource="Api" />;
+    return <ResourceNotFound resource="API Definition" />;
   }
 
-  const apiType = getApiType(api);
   return (
     <>
       <ApiDetailsHeader
         application={application}
         api={api}
-        apiType={apiId ? 'OpenAPI' : 'AsyncAPI'}
-        deleteMutation={apiId ? deleteApi : deleteEventApi}
+        deleteMutation={apiId ? deleteAPIDefinition : deleteEventDefinition}
       ></ApiDetailsHeader>
-
-      {apiType === 'openapi' ? (
-        <OpenAPIEditor api={api} />
+      {api.spec ? (
+        <DocumentationComponent
+          type={getApiType(api)}
+          content={api.spec.data}
+        />
       ) : (
-        <DocumentationComponent type={apiType} content={api.spec.data} />
+        <Panel className="fd-has-margin-large">
+          <Panel.Body className="fd-has-text-align-center fd-has-type-4">
+            No definition provided.
+          </Panel.Body>
+        </Panel>
       )}
     </>
   );
 };
 
 ApiDetails.propTypes = {
-  apiId: (props, propName, componentName) =>
-    CustomPropTypes.oneOfProps(props, componentName, ['apiId', 'eventApiId']),
-
-  eventApiId: (props, propName, componentName) =>
-    CustomPropTypes.oneOfProps(props, componentName, ['apiId', 'eventApiId']),
+  apiId: PropTypes.string,
+  eventApiId: PropTypes.string,
   applicationId: PropTypes.string.isRequired,
 };
 

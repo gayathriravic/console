@@ -1,7 +1,8 @@
 import React from 'react';
 import equal from 'deep-equal';
 import PropTypes from 'prop-types';
-import { Button, Input, Modal } from '@kyma-project/react-components';
+import { Modal } from './../../../shared/components/Modal/Modal';
+import { Button, Input } from '@kyma-project/react-components';
 import LuigiClient from '@kyma-project/luigi-client';
 
 import MultiChoiceList from '../../Shared/MultiChoiceList/MultiChoiceList.component';
@@ -19,7 +20,7 @@ class CreateApplicationModal extends React.Component {
   PropTypes = {
     existingApplications: PropTypes.array.isRequired,
     applicationsQuery: PropTypes.object.isRequired,
-    addApplication: PropTypes.func.isRequired,
+    registerApplication: PropTypes.func.isRequired,
     sendNotification: PropTypes.func.isRequired,
     scenariosQuery: PropTypes.object.isRequired,
   };
@@ -28,11 +29,13 @@ class CreateApplicationModal extends React.Component {
     return {
       formData: {
         name: '',
+        providerName: '',
         description: '',
         labels: {},
       },
       applicationWithNameAlreadyExists: false,
       invalidApplicationName: false,
+      invalidProviderName: false,
       nameFilled: false,
       requiredFieldsFilled: false,
       tooltipData: null,
@@ -114,8 +117,12 @@ class CreateApplicationModal extends React.Component {
   validateApplicationName = value => {
     const regex = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$/;
     const wrongApplicationName =
-      value && (!Boolean(regex.test(value || '')) || value.length > 253);
+      value && (!Boolean(regex.test(value || '')) || value.length > 36);
     return wrongApplicationName;
+  };
+
+  validateProviderName = value => {
+    return value && value.length > 256;
   };
 
   checkNameExists = async name => {
@@ -144,10 +151,18 @@ class CreateApplicationModal extends React.Component {
     if (name[0] === '-' || name[name.length - 1] === '-') {
       return 'The application name cannot begin or end with a dash';
     }
-    if (name.length > 253) {
-      return 'The maximum length of service name is 63 characters';
+    if (name.length > 36) {
+      return 'The maximum length of application name is 36 characters';
     }
     return 'The application name can only contain lowercase alphanumeric characters or dashes';
+  };
+
+  invalidProviderNameMessage = () => {
+    const name = this.state.formData.providerName;
+
+    return name.length > 256
+      ? 'The maximum length of the application provider name is 256 characters'
+      : null;
   };
 
   getApplicationNameErrorMessage = () => {
@@ -181,6 +196,17 @@ class CreateApplicationModal extends React.Component {
     });
   };
 
+  onChangeProviderName = value => {
+    this.setState({
+      invalidProviderName: this.validateProviderName(value),
+      providerNameFilled: Boolean(value),
+      formData: {
+        ...this.state.formData,
+        providerName: value,
+      },
+    });
+  };
+
   onChangeDescription = value => {
     this.setState({
       formData: {
@@ -194,17 +220,18 @@ class CreateApplicationModal extends React.Component {
     let success = true;
 
     const { formData } = this.state;
-    const { addApplication, sendNotification } = this.props;
+    const { registerApplication, sendNotification } = this.props;
 
     try {
       let createdApplicationName;
-      const createdApplication = await addApplication(formData);
+      const registeredApplication = await registerApplication(formData);
       if (
-        createdApplication &&
-        createdApplication.data &&
-        createdApplication.data.createApplication
+        registeredApplication &&
+        registeredApplication.data &&
+        registeredApplication.data.registerApplication
       ) {
-        createdApplicationName = createdApplication.data.createApplication.name;
+        createdApplicationName =
+          registeredApplication.data.registerApplication.name;
       }
 
       sendNotification({
@@ -239,10 +266,11 @@ class CreateApplicationModal extends React.Component {
       requiredFieldsFilled,
       tooltipData,
       invalidApplicationName,
+      invalidProviderName,
       applicationWithNameAlreadyExists,
     } = this.state;
     const createApplicationButton = (
-      <Button glyph="add" data-e2e-id="create-application-button">
+      <Button option="light" data-e2e-id="create-application-button">
         Create Application
       </Button>
     );
@@ -278,7 +306,16 @@ class CreateApplicationModal extends React.Component {
             required={true}
             type="text"
           />
-
+          <Input
+            label="Provider Name"
+            placeholder="Name of the application provider"
+            value={formData.providerName}
+            name="providerName"
+            handleChange={this.onChangeProviderName}
+            isError={invalidProviderName}
+            message={this.invalidProviderNameMessage()}
+            type="text"
+          />
           <Input
             label="Description"
             placeholder="Description of the Application"
@@ -307,7 +344,6 @@ class CreateApplicationModal extends React.Component {
 
     return (
       <Modal
-        width={'681px'}
         title="Create application"
         type={'emphasized'}
         modalOpeningComponent={createApplicationButton}
@@ -315,18 +351,13 @@ class CreateApplicationModal extends React.Component {
         disabledConfirm={
           !requiredFieldsFilled ||
           applicationWithNameAlreadyExists ||
-          invalidApplicationName
+          invalidApplicationName ||
+          invalidProviderName
         }
         tooltipData={tooltipData}
         onConfirm={this.createApplication}
         handleClose={this.clearState}
-        onShow={() => {
-          return LuigiClient.uxManager().addBackdrop();
-        }}
-        onHide={() => {
-          this.clearState();
-          LuigiClient.uxManager().removeBackdrop();
-        }}
+        onHide={() => this.clearState()}
       >
         {content}
       </Modal>
