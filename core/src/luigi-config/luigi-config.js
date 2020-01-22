@@ -631,7 +631,8 @@ Promise.all(initPromises)
               navigationContext: 'Logs',
               label: 'Log monitoring',
               category: 'Logs',
-              viewUrl: '/consoleapp.html#/home'
+              //viewUrl: '/consoleapp.html#/home'
+              viewUrl: 'http://127.0.0.1:9090/graph?g0.range_input=10s&g0.expr=http_requests_total&g0.tab=0'
             },
             {
               pathSegment: 'global-permissions',

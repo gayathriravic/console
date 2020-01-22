@@ -50,11 +50,6 @@ then
         [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
     esac
-    
-else
-    echo -e "\033[32mIt looks like the cluster is running ✓ \033[39m"
-fi
-
 if [ ! -f $CLUSTER_HISTORY_REGISTRY_FILE ]; then
     touch $CLUSTER_HISTORY_REGISTRY_FILE
 fi
